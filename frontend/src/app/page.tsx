@@ -60,6 +60,8 @@ interface ReadingPlanItem {
   action_items: string;
 }
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "https://books-fc3d.onrender.com";
+
 export default function NextGenDashboard() {
   const [activeTab, setActiveTab] = useState<string>("dashboard");
   const [theme, setTheme] = useState<"dark" | "light">("light");
@@ -99,7 +101,7 @@ export default function NextGenDashboard() {
     setRecSearchInput(value);
     if (value.trim().length >= 2) {
       try {
-        const res = await fetch(`http://127.0.0.1:8000/api/search/suggest?q=${encodeURIComponent(value)}`);
+        const res = await fetch(`${API_BASE}/api/search/suggest?q=${encodeURIComponent(value)}`);
         if (res.ok) {
           const data = await res.json();
           setRecSuggestions(data);
@@ -176,7 +178,7 @@ export default function NextGenDashboard() {
 
   const fetchAnalytics = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/analytics/dashboard");
+      const res = await fetch(`${API_BASE}/api/analytics/dashboard`);
       if (res.ok) {
         const data = await res.json();
         if (data && data.stats) {
@@ -220,7 +222,7 @@ export default function NextGenDashboard() {
 
   const fetchProfile = async (token: string) => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/auth/me", {
+      const res = await fetch(`${API_BASE}/api/auth/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
@@ -246,7 +248,7 @@ export default function NextGenDashboard() {
 
   const fetchPopularBooks = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/books/popular");
+      const res = await fetch(`${API_BASE}/api/books/popular`);
       if (res.ok) {
         const data = await res.json();
         setPopularBooks(data);
@@ -258,7 +260,7 @@ export default function NextGenDashboard() {
 
   const fetchBooks = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/books/?limit=100");
+      const res = await fetch(`${API_BASE}/api/books/?limit=100`);
       if (res.ok) {
         const data = await res.json();
         setBooks(data);
@@ -281,7 +283,7 @@ export default function NextGenDashboard() {
     setIsRecLoading(true);
     try {
       const contextStr = (overrideContext || sessionContext).join(",");
-      const url = `http://127.0.0.1:8000/api/recommendations/?limit=6&session_context=${encodeURIComponent(contextStr)}`;
+      const url = `${API_BASE}/api/recommendations/?limit=6&session_context=${encodeURIComponent(contextStr)}`;
       const headers: Record<string, string> = {};
       if (authToken) {
         headers["Authorization"] = `Bearer ${authToken}`;
@@ -337,7 +339,7 @@ export default function NextGenDashboard() {
 
   const fetchLeaderboard = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/auth/leaderboard");
+      const res = await fetch(`${API_BASE}/api/auth/leaderboard`);
       if (res.ok) {
         const data = await res.json();
         setLeaderboard(data);
@@ -359,7 +361,7 @@ export default function NextGenDashboard() {
       formData.append("username", authEmail);
       formData.append("password", authPassword);
 
-      const res = await fetch("http://127.0.0.1:8000/api/auth/token", {
+      const res = await fetch(`${API_BASE}/api/auth/token`, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: formData
@@ -393,7 +395,7 @@ export default function NextGenDashboard() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/auth/register", {
+      const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -428,7 +430,7 @@ export default function NextGenDashboard() {
   const handleOpenDetails = async (book: Book) => {
     setDetailBook(book);
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/books/${book.id}`);
+      const res = await fetch(`${API_BASE}/api/books/${book.id}`);
       if (res.ok) {
         const fullBook = await res.json();
         setDetailBook({
@@ -451,7 +453,7 @@ export default function NextGenDashboard() {
   // Chat/RAG coach workflow
   const loadQuiz = async (bookId: number) => {
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/chat/${bookId}/quiz`);
+      const res = await fetch(`${API_BASE}/api/chat/${bookId}/quiz`);
       if (res.ok) {
         const data = await res.json();
         setQuizList(data.quiz);
@@ -470,7 +472,7 @@ export default function NextGenDashboard() {
 
   const loadPlan = async (bookId: number) => {
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/chat/${bookId}/plan`);
+      const res = await fetch(`${API_BASE}/api/chat/${bookId}/plan`);
       if (res.ok) {
         const data = await res.json();
         setReadingPlan(data.plan);
@@ -493,7 +495,7 @@ export default function NextGenDashboard() {
     // If a RAG document is active, query document context
     if (ragDoc) {
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/chat/rag/query", {
+        const res = await fetch(`${API_BASE}/api/chat/rag/query`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -512,7 +514,7 @@ export default function NextGenDashboard() {
     }
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/chat/", {
+      const res = await fetch(`${API_BASE}/api/chat/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -543,7 +545,7 @@ export default function NextGenDashboard() {
     formData.append("file", pdfFile);
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/chat/rag/upload", {
+      const res = await fetch(`${API_BASE}/api/chat/rag/upload`, {
         method: "POST",
         body: formData
       });
@@ -569,7 +571,7 @@ export default function NextGenDashboard() {
     if (!ragDoc || !ragQueryText.trim()) return;
     setIsQueryingRag(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/chat/rag/query", {
+      const res = await fetch(`${API_BASE}/api/chat/rag/query`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
