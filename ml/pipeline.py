@@ -39,16 +39,18 @@ class HybridRecommender:
             if os.path.exists(self.books_pkl_path):
                 with open(self.books_pkl_path, "rb") as f:
                     raw_books_df = pickle.load(f)
-                    dedup = raw_books_df.drop_duplicates("Book-Title").head(12000)
+                    dedup = raw_books_df.drop_duplicates("Book-Title").head(5000)
+                    
+                    titles = dedup["Book-Title"].astype(str).tolist()
+                    authors = dedup["Book-Author"].astype(str).tolist()
+                    images = dedup["Image-URL-M"].astype(str).tolist()
+
                     self.books_lookup = {
-                        str(row["Book-Title"]): {
-                            "author": str(row["Book-Author"]),
-                            "image_url": str(row["Image-URL-M"])
-                        }
-                        for _, row in dedup.iterrows()
+                        t: {"author": a, "image_url": img}
+                        for t, a, img in zip(titles, authors, images)
                     }
                     self.title_list = list(self.books_lookup.keys())
-                    del raw_books_df
+                    del raw_books_df, dedup
                     gc.collect()
             else:
                 self.books_lookup = {}

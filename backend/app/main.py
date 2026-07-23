@@ -110,27 +110,27 @@ def seed_database():
             if os.path.exists(books_pkl_path):
                 with open(books_pkl_path, "rb") as f:
                     books_df = pickle.load(f)
-                    count = 0
-                    for index, row in books_df.iterrows():
-                        if count >= 5000:
-                            break
-                        title = str(row["Book-Title"])
+                    dedup = books_df.drop_duplicates("Book-Title").head(3000)
+                    titles = dedup["Book-Title"].astype(str).tolist()
+                    authors = dedup["Book-Author"].astype(str).tolist()
+                    images = dedup["Image-URL-M"].astype(str).tolist()
+                    
+                    for title, author, image in zip(titles, authors, images):
                         if title in seeded_titles:
                             continue
                         seeded_titles.add(title)
                         
                         book = Book(
                             title=title,
-                            author=str(row["Book-Author"]),
-                            image_url_m=str(row["Image-URL-M"]),
-                            genres=assign_genre(title, str(row["Book-Author"])),
+                            author=author,
+                            image_url_m=image,
+                            genres=assign_genre(title, author),
                             rating_avg=7.5,
                             rating_count=15,
-                            description=f"Explore the fascinating pages of '{title}' written by {row['Book-Author']}."
+                            description=f"Explore the fascinating pages of '{title}' written by {author}."
                         )
                         books_to_add.append(book)
-                        count += 1
-                    del books_df
+                    del books_df, dedup
                     import gc
                     gc.collect()
             
