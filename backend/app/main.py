@@ -130,6 +130,9 @@ def seed_database():
                         )
                         books_to_add.append(book)
                         count += 1
+                    del books_df
+                    import gc
+                    gc.collect()
             
             if books_to_add:
                 db.bulk_save_objects(books_to_add)

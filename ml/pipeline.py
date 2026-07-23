@@ -23,21 +23,23 @@ class HybridRecommender:
 
     def load_models(self):
         try:
+            import gc
             if os.path.exists(self.popular_pkl_path):
                 with open(self.popular_pkl_path, "rb") as f:
-                    self.popular_df = pickle.load(f)
-                    self.popular_lookup = dict(zip(self.popular_df["Book-Title"], self.popular_df["avg_rating"]))
+                    pop_df = pickle.load(f)
+                    self.popular_lookup = dict(zip(pop_df["Book-Title"], pop_df["avg_rating"]))
+                    del pop_df
             else:
                 self.popular_lookup = {}
                 
             if os.path.exists(self.pt_pkl_path):
                 with open(self.pt_pkl_path, "rb") as f:
                     self.pt = pickle.load(f)
+
             if os.path.exists(self.books_pkl_path):
                 with open(self.books_pkl_path, "rb") as f:
-                    self.books_df = pickle.load(f)
-                    # Pre-build fast title metadata dictionary for O(1) lookup
-                    dedup = self.books_df.drop_duplicates("Book-Title")
+                    raw_books_df = pickle.load(f)
+                    dedup = raw_books_df.drop_duplicates("Book-Title").head(12000)
                     self.books_lookup = {
                         str(row["Book-Title"]): {
                             "author": str(row["Book-Author"]),
@@ -46,6 +48,8 @@ class HybridRecommender:
                         for _, row in dedup.iterrows()
                     }
                     self.title_list = list(self.books_lookup.keys())
+                    del raw_books_df
+                    gc.collect()
             else:
                 self.books_lookup = {}
                 self.title_list = []
@@ -53,7 +57,7 @@ class HybridRecommender:
             if os.path.exists(self.sim_scores_pkl_path):
                 with open(self.sim_scores_pkl_path, "rb") as f:
                     self.similarity_scores = pickle.load(f)
-            print("ML Models loaded & indexed successfully in HybridRecommender pipeline.")
+            print("ML Models loaded & memory optimized in HybridRecommender pipeline.")
         except Exception as e:
             print(f"Error loading model pickle files: {e}")
 
