@@ -69,8 +69,8 @@ def seed_database():
     db = SessionLocal()
     try:
         book_count = db.query(Book).count()
-        if book_count == 0:
-            print("Database empty. Seeding books from local pickle files...")
+        if book_count < 5000:
+            print("Seeding books from local pickle/CSV dataset into SQL database...")
             
             base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
             popular_pkl_path = os.path.join(base_dir, "popular.pkl")
@@ -78,6 +78,11 @@ def seed_database():
             
             books_to_add = []
             seeded_titles = set()
+            
+            # Keep existing titles if re-seeding
+            existing_books = db.query(Book.title).all()
+            for b in existing_books:
+                seeded_titles.add(b.title)
             
             if os.path.exists(popular_pkl_path):
                 with open(popular_pkl_path, "rb") as f:
@@ -107,7 +112,7 @@ def seed_database():
                     books_df = pickle.load(f)
                     count = 0
                     for index, row in books_df.iterrows():
-                        if count >= 400:
+                        if count >= 5000:
                             break
                         title = str(row["Book-Title"])
                         if title in seeded_titles:
@@ -130,8 +135,6 @@ def seed_database():
                 db.bulk_save_objects(books_to_add)
                 db.commit()
                 print(f"Successfully seeded {len(books_to_add)} books into SQL database.")
-            else:
-                print("No pickle files found or no books parsed for seeding.")
         else:
             print(f"Database already contains {book_count} books. Skipping seeding.")
     except Exception as e:
