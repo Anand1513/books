@@ -84,6 +84,7 @@ export default function NextGenDashboard() {
   const [recSearchInput, setRecSearchInput] = useState<string>("");
   const [recSuggestions, setRecSuggestions] = useState<{ title: string; author: string }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
+  const [isRecLoading, setIsRecLoading] = useState<boolean>(false);
 
   const handleFetchRecsForBook = (bookTitle: string) => {
     const updatedContext = [bookTitle];
@@ -277,6 +278,7 @@ export default function NextGenDashboard() {
   };
 
   const fetchRecommendations = async (overrideContext?: string[]) => {
+    setIsRecLoading(true);
     try {
       const contextStr = (overrideContext || sessionContext).join(",");
       const url = `http://127.0.0.1:8000/api/recommendations/?limit=6&session_context=${encodeURIComponent(contextStr)}`;
@@ -328,6 +330,8 @@ export default function NextGenDashboard() {
           }
         }
       ]);
+    } finally {
+      setIsRecLoading(false);
     }
   };
 
@@ -1287,10 +1291,15 @@ export default function NextGenDashboard() {
                     </div>
                     <button
                       type="submit"
-                      className="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-500/20 transition-all flex items-center gap-1.5 flex-shrink-0"
+                      disabled={isRecLoading}
+                      className="px-5 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-500/20 transition-all flex items-center gap-1.5 flex-shrink-0"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                      Recommend
+                      {isRecLoading ? (
+                        <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                      )}
+                      {isRecLoading ? "Buffering..." : "Recommend"}
                     </button>
                   </form>
                 </div>
@@ -1308,102 +1317,139 @@ export default function NextGenDashboard() {
                 )}
               </div>
 
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                {recommendations.map((book) => (
-                  <div key={book.id} className={`border rounded-3xl p-6 flex flex-col sm:flex-row gap-6 shadow-sm hover:shadow-md transition-all duration-300 ${
-                    isDark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200/50"
+              {isRecLoading ? (
+                <div className="space-y-6">
+                  {/* Buffering Indicator Banner */}
+                  <div className={`p-4 rounded-2xl border flex items-center gap-3 animate-pulse ${
+                    isDark ? "bg-blue-950/40 border-blue-800/60 text-blue-300" : "bg-blue-50 border-blue-200 text-blue-700"
                   }`}>
-                    <div 
-                      onClick={() => handleOpenDetails(book)}
-                      className={`w-full sm:w-36 h-48 rounded-2xl flex-shrink-0 flex items-center justify-center font-bold text-2xl overflow-hidden cursor-pointer hover:opacity-90 transition-all ${
-                        isDark ? "bg-slate-850 text-slate-650" : "bg-slate-50 text-slate-400"
-                      }`}
-                    >
-                      {book.image_url_m ? (
-                        <img src={book.image_url_m} alt={book.title} className="w-full h-full object-cover" />
-                      ) : (
-                        "📖"
-                      )}
-                    </div>
-                    
-                    <div className="flex-grow flex flex-col justify-between space-y-4">
-                      <div>
-                        <div className="flex items-center justify-between">
-                          <span className="bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md">
-                            {book.genres || "Fiction"}
-                          </span>
-                          {book.explainability && (
-                            <span className="text-xs font-bold text-emerald-500">
-                              Confidence: {Math.round(book.explainability.confidence_score * 100)}%
-                            </span>
-                          )}
-                        </div>
-                        <h3 
-                          onClick={() => handleOpenDetails(book)}
-                          className="text-xl font-bold pt-2 line-clamp-1 cursor-pointer hover:text-blue-550 transition-colors"
-                        >
-                          {book.title}
-                        </h3>
-                        <p className="text-xs text-slate-450">{book.author}</p>
-                        
-                        {book.explainability && (
-                          <div className={`p-3.5 rounded-xl mt-3 space-y-2 border ${isDark ? "bg-slate-950 border-slate-850" : "bg-slate-50 border-slate-100"}`}>
-                            <p className="text-[11px] leading-relaxed font-light">
-                              <strong>Why Recommended:</strong> {book.explainability.why}
-                            </p>
-                            
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-[9px] text-slate-450">
-                              <div>
-                                <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden mb-1">
-                                  <div className="bg-blue-500 h-full" style={{ width: `${book.explainability.genre_similarity * 100}%` }}></div>
-                                </div>
-                                Genre Match: {Math.round(book.explainability.genre_similarity * 100)}%
-                              </div>
-                              <div>
-                                <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden mb-1">
-                                  <div className="bg-purple-500 h-full" style={{ width: `${book.explainability.reader_overlap * 100}%` }}></div>
-                                </div>
-                                Reader Overlap: {Math.round(book.explainability.reader_overlap * 100)}%
-                              </div>
-                              <div>
-                                <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden mb-1">
-                                  <div className="bg-emerald-500 h-full" style={{ width: `${book.explainability.semantic_similarity * 100}%` }}></div>
-                                </div>
-                                Semantic Sim: {Math.round(book.explainability.semantic_similarity * 100)}%
-                              </div>
-                              <div>
-                                <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden mb-1">
-                                  <div className="bg-amber-500 h-full" style={{ width: `${book.explainability.popularity_score * 100}%` }}></div>
-                                </div>
-                                Popularity: {Math.round(book.explainability.popularity_score * 100)}%
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className={`flex flex-wrap gap-2 pt-3 border-t ${isDark ? "border-slate-800" : "border-slate-100"}`}>
-                        <button onClick={() => { setSelectedBook(book); setActiveTab("coach"); loadQuiz(book.id); loadPlan(book.id); }} className={`px-3 py-2 rounded-xl text-xs font-semibold flex-1 ${isDark ? "bg-slate-800 hover:bg-slate-750 text-slate-200" : "bg-slate-100 hover:bg-slate-200 text-slate-700"}`}>
-                          Study Coach
-                        </button>
-                        <button onClick={() => handleBookClick(book.title)} className="px-3 py-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-xs font-semibold">
-                          Add context
-                        </button>
-                        <a 
-                          href={getAmazonBuyUrl(book.title, book.author)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold flex items-center gap-1 border border-amber-500/20"
-                          title="Buy Book on Amazon"
-                        >
-                          <span>🛒</span>
-                          <span>Buy</span>
-                        </a>
-                      </div>
+                    <div className="w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin flex-shrink-0" />
+                    <div className="text-xs font-semibold">
+                      ⚡ AI Recommender Engine Buffering... Vectorizing embeddings, matching collaborative reader correlation & reranking candidate items.
                     </div>
                   </div>
-                ))}
-              </div>
+
+                  {/* Skeleton Loading Grid */}
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    {[1, 2, 3, 4].map((n) => (
+                      <div key={n} className={`border rounded-3xl p-6 flex flex-col sm:flex-row gap-6 animate-pulse ${
+                        isDark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200/50"
+                      }`}>
+                        <div className={`w-full sm:w-36 h-48 rounded-2xl flex-shrink-0 ${isDark ? "bg-slate-800" : "bg-slate-200"}`} />
+                        <div className="flex-1 space-y-3 pt-2">
+                          <div className={`h-5 w-3/4 rounded-lg ${isDark ? "bg-slate-800" : "bg-slate-200"}`} />
+                          <div className={`h-3 w-1/2 rounded-lg ${isDark ? "bg-slate-800" : "bg-slate-200"}`} />
+                          <div className={`h-16 w-full rounded-xl ${isDark ? "bg-slate-850" : "bg-slate-100"}`} />
+                          <div className="flex gap-2 pt-2">
+                            <div className={`h-8 w-24 rounded-lg ${isDark ? "bg-slate-800" : "bg-slate-200"}`} />
+                            <div className={`h-8 w-24 rounded-lg ${isDark ? "bg-slate-800" : "bg-slate-200"}`} />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                  {recommendations.map((book) => (
+                    <div key={book.id} className={`border rounded-3xl p-6 flex flex-col sm:flex-row gap-6 shadow-sm hover:shadow-md transition-all duration-300 ${
+                      isDark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200/50"
+                    }`}>
+                      <div 
+                        onClick={() => handleOpenDetails(book)}
+                        className={`w-full sm:w-36 h-48 rounded-2xl flex-shrink-0 flex items-center justify-center font-bold text-2xl overflow-hidden cursor-pointer hover:opacity-90 transition-all ${
+                          isDark ? "bg-slate-850 text-slate-650" : "bg-slate-50 text-slate-400"
+                        }`}
+                      >
+                        {book.image_url_m ? (
+                          <img src={book.image_url_m} alt={book.title} className="w-full h-full object-cover" />
+                        ) : (
+                          "📖"
+                        )}
+                      </div>
+                      
+                      <div className="flex-grow flex flex-col justify-between space-y-4">
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <span className="bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md">
+                              {book.genres || "Fiction"}
+                            </span>
+                            {book.explainability && (
+                              <span className="text-xs font-bold text-emerald-500">
+                                Confidence: {Math.round(book.explainability.confidence_score * 100)}%
+                              </span>
+                            )}
+                          </div>
+                          
+                          <h3 onClick={() => handleOpenDetails(book)} className={`font-bold text-lg mt-2 text-left hover:text-blue-500 cursor-pointer transition-colors ${
+                            isDark ? "text-white" : "text-slate-900"
+                          }`}>
+                            {book.title}
+                          </h3>
+                          <p className="text-xs text-slate-450 text-left">{book.author}</p>
+                          
+                          {book.explainability && (
+                            <div className={`mt-3 p-3 rounded-xl border text-left text-xs ${
+                              isDark ? "bg-slate-850/50 border-slate-800 text-slate-300" : "bg-slate-50 border-slate-200/60 text-slate-600"
+                            }`}>
+                              <p className="font-medium text-[11px]">
+                                <span className="font-semibold text-slate-400">Why Recommended: </span>
+                                {book.explainability.why}
+                              </p>
+                              
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-[9px] text-slate-450">
+                                <div>
+                                  <span>Genre Match:</span>
+                                  <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full mt-1 overflow-hidden">
+                                    <div className="bg-blue-500 h-full rounded-full" style={{ width: `${book.explainability.genre_similarity * 100}%` }} />
+                                  </div>
+                                </div>
+                                <div>
+                                  <span>Reader Overlap:</span>
+                                  <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full mt-1 overflow-hidden">
+                                    <div className="bg-indigo-500 h-full rounded-full" style={{ width: `${book.explainability.reader_overlap * 100}%` }} />
+                                  </div>
+                                </div>
+                                <div>
+                                  <span>Semantic Sim:</span>
+                                  <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full mt-1 overflow-hidden">
+                                    <div className="bg-purple-500 h-full rounded-full" style={{ width: `${book.explainability.semantic_similarity * 100}%` }} />
+                                  </div>
+                                </div>
+                                <div>
+                                  <span>Popularity:</span>
+                                  <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full mt-1 overflow-hidden">
+                                    <div className="bg-amber-500 h-full rounded-full" style={{ width: `${book.explainability.popularity_score * 100}%` }} />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button onClick={() => { setSelectedBook(book); setActiveTab("coach"); loadQuiz(book.id); loadPlan(book.id); }} className={`px-3 py-2 rounded-xl text-xs font-semibold flex-1 ${isDark ? "bg-slate-800 hover:bg-slate-750 text-slate-200" : "bg-slate-100 hover:bg-slate-200 text-slate-700"}`}>
+                            Study Coach
+                          </button>
+                          <button onClick={() => handleBookClick(book.title)} className="px-3 py-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-xs font-semibold">
+                            Add context
+                          </button>
+                          <a 
+                            href={getAmazonBuyUrl(book.title, book.author)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold flex items-center gap-1 border border-amber-500/20"
+                            title="Buy Book on Amazon"
+                          >
+                            <span>🛒</span>
+                            <span>Buy</span>
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
