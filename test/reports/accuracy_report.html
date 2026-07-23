@@ -1,0 +1,185 @@
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Book Recommendation System - Accuracy Report</title>
+        <style>
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                line-height: 1.6;
+                margin: 0;
+                padding: 20px;
+                background-color: #f5f5f5;
+            }
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                background-color: white;
+                padding: 30px;
+                border-radius: 10px;
+                box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            }
+            h1 {
+                color: #2c3e50;
+                text-align: center;
+                border-bottom: 3px solid #3498db;
+                padding-bottom: 10px;
+            }
+            h2 {
+                color: #34495e;
+                border-left: 4px solid #3498db;
+                padding-left: 15px;
+                margin-top: 30px;
+            }
+            .metric-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 20px;
+                margin: 20px 0;
+            }
+            .metric-card {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 20px;
+                border-radius: 10px;
+                text-align: center;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            }
+            .metric-value {
+                font-size: 2em;
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+            .metric-label {
+                font-size: 0.9em;
+                opacity: 0.9;
+            }
+            .chart-container {
+                text-align: center;
+                margin: 30px 0;
+            }
+            .chart-container img {
+                max-width: 100%;
+                height: auto;
+                border-radius: 10px;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            }
+            .status-good { background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%); }
+            .status-warning { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+            .status-info { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+            .recommendations {
+                background-color: #ecf0f1;
+                padding: 20px;
+                border-radius: 10px;
+                margin: 20px 0;
+            }
+            .timestamp {
+                text-align: center;
+                color: #7f8c8d;
+                font-style: italic;
+                margin-top: 30px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>📚 Book Recommendation System - Accuracy Report</h1>
+            
+            <h2>📊 Dataset Overview</h2>
+            <div class="metric-grid">
+                <div class="metric-card status-info">
+                    <div class="metric-value">271,360</div>
+                    <div class="metric-label">Total Books</div>
+                </div>
+                <div class="metric-card status-info">
+                    <div class="metric-value">1,149,780</div>
+                    <div class="metric-label">Total Ratings</div>
+                </div>
+                <div class="metric-card status-info">
+                    <div class="metric-value">105,283</div>
+                    <div class="metric-label">Total Users</div>
+                </div>
+                <div class="metric-card status-good">
+                    <div class="metric-value">706</div>
+                    <div class="metric-label">Books in Model</div>
+                </div>
+                <div class="metric-card status-warning">
+                    <div class="metric-value">0.3%</div>
+                    <div class="metric-label">Coverage</div>
+                </div>
+                <div class="metric-card status-info">
+                    <div class="metric-value">4.2</div>
+                    <div class="metric-label">Avg Ratings/Book</div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <img src="dataset_overview.png" alt="Dataset Overview">
+            </div>
+            
+            <h2>🎯 Model Performance</h2>
+            <div class="metric-grid">
+                <div class="metric-card status-good">
+                    <div class="metric-value">97.5%</div>
+                    <div class="metric-label">Matrix Sparsity</div>
+                </div>
+                <div class="metric-card status-info">
+                    <div class="metric-value">0.064</div>
+                    <div class="metric-label">Avg Similarity</div>
+                </div>
+                <div class="metric-card status-good">
+                    <div class="metric-value">0.000s</div>
+                    <div class="metric-label">Response Time</div>
+                </div>
+                <div class="metric-card status-info">
+                    <div class="metric-value">3.8 MB</div>
+                    <div class="metric-label">Model Size</div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <img src="performance_analysis.png" alt="Performance Analysis">
+            </div>
+            
+            <h2>👥 User Analysis</h2>
+            <div class="chart-container">
+                <img src="user_rating_analysis.png" alt="User and Rating Analysis">
+            </div>
+            
+            <h2>💡 Recommendations</h2>
+            <div class="recommendations">
+                <h3>✅ Strengths:</h3>
+                <ul>
+                    <li>Fast recommendation generation (0.000s average)</li>
+                    <li>Reasonable model size (3.8 MB)</li>
+                    <li>Good similarity score distribution</li>
+                    <li>Handles 706 books effectively</li>
+                </ul>
+                
+                <h3>⚠️ Areas for Improvement:</h3>
+                <ul>
+                    <li>Low coverage (0.3% of total books)</li>
+                    <li>High matrix sparsity (97.5%)</li>
+                    <li>Cold start problem for new books</li>
+                    <li>Limited to collaborative filtering approach</li>
+                </ul>
+                
+                <h3>🚀 Suggested Enhancements:</h3>
+                <ul>
+                    <li>Implement hybrid recommendation system</li>
+                    <li>Add content-based filtering for new books</li>
+                    <li>Consider matrix factorization techniques</li>
+                    <li>Implement user-based collaborative filtering</li>
+                    <li>Add real-time learning capabilities</li>
+                </ul>
+            </div>
+            
+            <div class="timestamp">
+                Report generated on: 2025-10-10 00:01:16
+            </div>
+        </div>
+    </body>
+    </html>
+    
